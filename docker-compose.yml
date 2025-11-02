@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: batchdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/10-schema.sql
+      - ./src/main/resources/seed.sql:/docker-entrypoint-initdb.d/20-seed.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U user -d batchdb -c \"SELECT count(*) FROM person;\" | grep -q \"1\""]
+      interval: 20s
+      timeout: 20s
+      retries: 10
+
+  batch-app:
+    build: .
+    container_name: batch_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/batchdb
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_BATCH_JDBC_INITIALIZE_SCHEMA=ALWAYS
+      - JAVA_OPTS=-XX:+UnlockDiagnosticVMOptions -XX:+FlightRecorder -XX:StartFlightRecording=duration=2m,filename=/recordings/batch-app.jfr,settings=profile
+    volumes:
+      - ./recordings:/recordings
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  nodejs-batch-app:
+    build: ./nodejs-batch-app
+    container_name: nodejs_batch_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=batchdb
+      - BATCH_SIZE=2000
+      - CONCURRENCY=10
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
