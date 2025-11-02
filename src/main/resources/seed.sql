@@ -2,7 +2,7 @@ DO $$
 DECLARE
     i INT;
 BEGIN
-    FOR i IN 1..1000000 LOOP
+    FOR i IN 1..3000000 LOOP
         INSERT INTO person (id, first_name, last_name, email, age, address, job_title, created_at, updated_at)
         VALUES (
             i,

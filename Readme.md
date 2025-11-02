@@ -2,14 +2,16 @@
 
 This project is a performance benchmark comparing a multi-threaded Spring Batch application against an asynchronous Node.js script for a large data-processing job.
 
-The test processes **1 million records** from a PostgreSQL database, which is also containerized.
+The test processes **x million records** from a PostgreSQL database, which is also containerized.
+
+This is seeded using the `/seed-data.sql` file.
 
 ## 🚀 Overview
 
 The goal is to compare the performance of Spring Batch and Node.js under two different scenarios:
 
-1.  **I/O-Only Test:** How fast can each platform read 1 million records from the database? (No processing)
-2.  **CPU-Bound Test:** How fast can each platform read 1 million records *and* perform a non-trivial, CPU-intensive calculation for each record?
+1.  **I/O-Only Test:** How fast can each platform read x million records from the database? (No processing)
+2.  **CPU-Bound Test:** How fast can each platform read x million records *and* perform a non-trivial, CPU-intensive calculation for each record?
 
 ## 📋 Requirements
 
@@ -72,7 +74,7 @@ For example, to set limits for the `batch-app` and `nodejs-batch-app` services:
       resources:
         limits:
           cpus: '1.0'  # Allocate 1 CPU core
-          memory: 2G   # Allocate 2 Gigabytes of memory
+          memory: 1G   # Allocate 1 Gigabytes of memory
 
   nodejs-batch-app:
     # ... other configurations
