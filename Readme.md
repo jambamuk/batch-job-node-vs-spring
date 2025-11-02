@@ -1,5 +1,3 @@
------
-
 # Spring Batch vs. Node.js Batch Performance Comparison
 
 This project is a performance benchmark comparing a multi-threaded Spring Batch application against an asynchronous Node.js script for a large data-processing job.
@@ -43,14 +41,58 @@ This command will:
 
 You can observe the console output for each service to see its start time, finish time, and total records processed.
 
+## ⚙️ Configuration
+
+### Spring Batch Application Configuration
+
+The Spring Batch application can be configured using the `src/main/resources/application.properties` file. Key properties include:
+
+*   `batch.chunk.size`: Defines the number of items to be processed in a single chunk. Adjusting this can impact performance and memory usage.
+*   `batch.threads.count`: Specifies the number of threads to use for parallel processing. This is crucial for CPU-bound tasks.
+*   `batch.virtual.threads.enabled`: Set to `true` to enable Java Virtual Threads for potentially more efficient concurrency.
+
+Example `application.properties`:
+
+```properties
+batch.chunk.size=2000
+batch.threads.count=10
+batch.virtual.threads.enabled=true
+```
+
+### Docker Compose Resource Limits
+
+You can control the CPU and memory resources allocated to each service within the `docker-compose.yml` file under the `deploy.resources.limits` section. This is particularly important for performance tuning and preventing Out Of Memory (OOM) errors (exit code 137).
+
+For example, to set limits for the `batch-app` and `nodejs-batch-app` services:
+
+```yaml
+  batch-app:
+    # ... other configurations
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'  # Allocate 1 CPU core
+          memory: 2G   # Allocate 2 Gigabytes of memory
+
+  nodejs-batch-app:
+    # ... other configurations
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'  # Allocate 1 CPU core
+          memory: 1G   # Allocate 1 Gigabyte of memory
+```
+
+Adjust these values based on your system's resources and the specific needs of each application to optimize performance and stability.
+
 ## 📈 Test Results
 
 These benchmarks were run on a system processing 1 million records.
 
 | Test Scenario | 🌱 Spring Batch (Java 21) | 🐢 Node.js (Node 20) |
 | :--- | :--- | :--- |
-| **Test 1: I/O-Only (Read-Only)** | \~8 seconds | **\~5 seconds** |
-| **Test 2: CPU-Bound (Read + Process)**| **\~9 seconds** | \~17 seconds |
+| **Test 1: I/O-Only (Read-Only)** | ~8 seconds | **~5 seconds** |
+| **Test 2: CPU-Bound (Read + Process)**| **~9 seconds** | ~17 seconds |
 | **Memory Usage (Observed)** | High | Low |
 
 -----
